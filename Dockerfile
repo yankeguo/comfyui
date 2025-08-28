@@ -1,16 +1,16 @@
-FROM python:3.11-trixie
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-# Install system dependencies in a single layer
+# Install system dependencies and clone/install everything in a single RUN
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     git \
     curl \
-    vim \
-    tmux \
     tini \
     ffmpeg \
     libsm6 \
@@ -19,29 +19,17 @@ RUN apt-get update && \
     libxrender1 \
     libgomp1 && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
-    python3 -m venv /venv
+    rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/venv/bin:$PATH"
-
-# Set working directory early
+# Set working directory
 WORKDIR /app
 
-# Clone repositories and install dependencies in optimized order
+# Clone ComfyUI and custom nodes, then install all dependencies in a single RUN
 RUN git clone --depth=1 https://github.com/comfyanonymous/ComfyUI.git . && \
-    cd custom_nodes && \
-    git clone --depth=1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git VideoHelperSuite && \
-    cd .. && \
-    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129 && \
-    pip install -r requirements.txt && \
-    pip install -r custom_nodes/VideoHelperSuite/requirements.txt
-
-# Create non-root user for security
-RUN groupadd -r comfyui && useradd -r -g comfyui -d /app -s /bin/bash comfyui && \
-    chown -R comfyui:comfyui /app
-
-# Switch to non-root user
-USER comfyui
+    git clone --depth=1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git custom_nodes/VideoHelperSuite && \
+    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129 && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r custom_nodes/VideoHelperSuite/requirements.txt
 
 # Expose port
 EXPOSE 8188

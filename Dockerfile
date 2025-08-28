@@ -9,17 +9,17 @@ ENV UV_PYTHON_DOWNLOADS=never \
 # Install system dependencies in a single layer
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        git \
-        curl \
-        vim \
-        tmux \
-        tini \
-        ffmpeg \
-        libsm6 \
-        libxext6 \
-        libglib2.0-0 \
-        libxrender1 \
-        libgomp1 && \
+    git \
+    curl \
+    vim \
+    tmux \
+    tini \
+    ffmpeg \
+    libsm6 \
+    libxext6 \
+    libglib2.0-0 \
+    libxrender1 \
+    libgomp1 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -31,9 +31,11 @@ RUN git clone --depth=1 https://github.com/comfyanonymous/ComfyUI.git . && \
     cd custom_nodes && \
     git clone --depth=1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git VideoHelperSuite && \
     cd .. && \
-    uv pip install --system --no-cache-dir torch torchvision torchaudio && \
-    uv pip install --system --no-cache-dir -r requirements.txt && \
-    uv pip install --system --no-cache-dir -r custom_nodes/VideoHelperSuite/requirements.txt && \
+    uv venv /venv && \
+    source /venv/bin/activate && \
+    uv pip install --no-cache-dir torch torchvision torchaudio && \
+    uv pip install --no-cache-dir -r requirements.txt && \
+    uv pip install --no-cache-dir -r custom_nodes/VideoHelperSuite/requirements.txt && \
     find /usr/local -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
     find /usr/local -name "*.pyc" -delete 2>/dev/null || true
 
@@ -55,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Default command
-CMD ["python3", "server.py", "--listen", "0.0.0.0", "--port", "8188"]
+CMD ["/venv/bin/python3", "server.py", "--listen", "0.0.0.0", "--port", "8188"]

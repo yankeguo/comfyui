@@ -1,9 +1,7 @@
-FROM ghcr.io/astral-sh/uv:0.8.13-python3.11-trixie
+FROM python:3.11-trixie
 
 # Set environment variables
-ENV UV_PYTHON_DOWNLOADS=never \
-    UV_TORCH_BACKEND=cu129 \
-    PYTHONUNBUFFERED=1 \
+ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
 # Install system dependencies in a single layer
@@ -21,7 +19,10 @@ RUN apt-get update && \
     libxrender1 \
     libgomp1 && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
+    python3 -m venv /venv
+
+ENV PATH="/venv/bin:$PATH"
 
 # Set working directory early
 WORKDIR /app
@@ -31,11 +32,9 @@ RUN git clone --depth=1 https://github.com/comfyanonymous/ComfyUI.git . && \
     cd custom_nodes && \
     git clone --depth=1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git VideoHelperSuite && \
     cd .. && \
-    uv venv /venv && \
-    source /venv/bin/activate && \
-    uv pip install torch torchvision torchaudio && \
-    uv pip install -r requirements.txt && \
-    uv pip install -r custom_nodes/VideoHelperSuite/requirements.txt
+    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129 && \
+    pip install -r requirements.txt && \
+    pip install -r custom_nodes/VideoHelperSuite/requirements.txt
 
 # Create non-root user for security
 RUN groupadd -r comfyui && useradd -r -g comfyui -d /app -s /bin/bash comfyui && \
@@ -55,4 +54,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Default command
-CMD ["/venv/bin/python3", "server.py", "--listen", "0.0.0.0", "--port", "8188"]
+CMD ["python3", "server.py", "--listen", "0.0.0.0", "--port", "8188"]

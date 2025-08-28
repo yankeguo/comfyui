@@ -33,11 +33,9 @@ RUN git clone --depth=1 https://github.com/comfyanonymous/ComfyUI.git . && \
     cd .. && \
     uv venv /venv && \
     source /venv/bin/activate && \
-    uv pip install --no-cache-dir torch torchvision torchaudio && \
-    uv pip install --no-cache-dir -r requirements.txt && \
-    uv pip install --no-cache-dir -r custom_nodes/VideoHelperSuite/requirements.txt && \
-    find /usr/local -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
-    find /usr/local -name "*.pyc" -delete 2>/dev/null || true
+    uv pip install torch torchvision torchaudio && \
+    uv pip install -r requirements.txt && \
+    uv pip install -r custom_nodes/VideoHelperSuite/requirements.txt
 
 # Create non-root user for security
 RUN groupadd -r comfyui && useradd -r -g comfyui -d /app -s /bin/bash comfyui && \

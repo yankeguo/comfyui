@@ -21,15 +21,19 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN python3 -m venv /venv
+
+ENV PATH="/venv/bin:$PATH"
+
 # Set working directory
 WORKDIR /app
 
 # Clone ComfyUI and custom nodes, then install all dependencies in a single RUN
 RUN git clone --depth=1 https://github.com/comfyanonymous/ComfyUI.git . && \
     git clone --depth=1 https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite.git custom_nodes/VideoHelperSuite && \
-    pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129 && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir -r custom_nodes/VideoHelperSuite/requirements.txt
+    pip3 install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129 && \
+    pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install --no-cache-dir -r custom_nodes/VideoHelperSuite/requirements.txt
 
 # Expose port
 EXPOSE 8188
